@@ -22,10 +22,15 @@ public class Player extends piedpipers.sim.Player {
   static int phase = 0
   // wanted rats array for optimization of the greedy piper behavior
   static int[] wantedRats = new int[7]
+  static Point[] thePipers;
+  static Point[] theRats;
 
   boolean inPosition = false; // piper reached initial position
   boolean atBottom = false; // piper reached bottom of board in vertical sweep
   boolean backAtGate = false; // piper returned to the gate
+  boolean gotWantedRat = false; // piper returning the assigned rat
+
+
 
   
 	public void init() {
@@ -35,7 +40,8 @@ public class Player extends piedpipers.sim.Player {
 
 	public Point move(Point[] pipers, // all pipers
                     Point[] rats) { // all rats
-
+	thePipers = pipers;
+	theRats = rats;
 		npipers = pipers.length;
 	  nrats = rats.length;
 
@@ -99,8 +105,58 @@ public class Player extends piedpipers.sim.Player {
   }
 
   static Point chasingPhaseOne(Point current, Point[] rats, Point[] pipers) {
+	switch(id){
+		case 0: // dropbox piper
 
+			Point midPoint = new Point(dimension * (3.0 / 4.0), dimension/2);
+			Point nearestRat = closestRat(current, rats);
+			this.music = true;
+			
+			// logic for switching phase
+			int remainingRatsCounter = rats.length;
+			for(int i = 0; i < rats.length; i++){
+				if(distance(current, rats[i]) < 10){
+					remainingRatsCounter--;
+				}
+			}
+			if(remainingRatsCounter < pipers.length){
+				phase = 3;
+			}
+			
+			if(Math.abs(nearestRat.x - midPoint.x) < 40 && Math.abs(nearestRat.y - midPoint.y) < 40){
+				return nearestRat;
+			}else{
+				return midPoint;
+			}
+		break;
+		
+		case 1: // team leader piper assign jobs
+			for(int i = 0; i < wantedRats.length; i++){
+				wantedRats[i] = closestRatIndex(pipers[i+1], rats);				
+			}
+			// intentially no break so leader piper could also pick up rat
+		
+		default: // the rest pipers are not thinkers :|
+			if(!gotWantedRat){
+				if(distance(current, rats[wantedRats[id-1]]) < 10){
+					gotWantedRat = true;
+					this.music = true;
+				}else{
+					this.music = false;
+					return rats[wantedRats[id-1]];
+				}
+			}else{ // moving back to dropbox
+				// handover logic
+				if(distance(current, pipers[0]) < 0.5){
+					music = false;
+					gotWantedRat = false;
+				}
+				
+				return pipers[0];
+			}
+	}
     
+	return current;
   
   }
 
@@ -173,14 +229,62 @@ public class Player extends piedpipers.sim.Player {
   }
 
   // return the closest rat not under the influence of the piper
+  static Point closestRatIndex(Point current, Point[] rats) {
+    Point closestRatIdx = -1;  
+    double leastDist = Double.MAX_VALUE;
+    for (int i = 0; i < rats.length; i++) {
+      double currentDist = distance(current, rats[i]);
+      if (currentDist < leastDist && currentDist > 10) {
+		// Edward here: adding checking for other pipers' influence
+		if(thePipers != null){
+			boolean flag = false;
+			for(int j = 0; j < thePipers.length; j++){
+				if(distance(thePiper[j],rats[i]) < 10.0){
+					flag = true;
+					break;
+				}
+			}
+			if(flag){
+				continue;
+			}else{
+				closestRat = i;
+		        leastDist = currentDist;
+			}
+			
+		}
+		// Edward out
+ 
+      }
+    }
+    return closestRatIdx;
+  }
+
+  // return the closest rat not under the influence of the piper
   static Point closestRat(Point current, Point[] rats) {
     Point closestRat = rats[0];  
     double leastDist = Double.MAX_VALUE;
     for (int i = 0; i < rats.length; i++) {
       double currentDist = distance(current, rats[i]);
       if (currentDist < leastDist && currentDist > 10) {
-        closestRat = rats[i];
-        leastDist = currentDist;
+		// Edward here: adding checking for other pipers' influence
+		if(thePipers != null){
+			boolean flag = false;
+			for(int j = 0; j < thePipers.length; j++){
+				if(distance(thePiper[j],rats[i]) < 10.0){
+					flag = true;
+					break;
+				}
+			}
+			if(flag){
+				continue;
+			}else{
+				closestRat = rats[i];
+		        leastDist = currentDist;
+			}
+			
+		}
+		// Edward out
+ 
       }
     }
     return closestRat;
