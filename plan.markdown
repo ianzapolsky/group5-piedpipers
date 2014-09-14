@@ -1,7 +1,7 @@
 # The Plan
 
 ### Phase I
-- [ ] Vertical sweep
+- [x] Vertical sweep
 - [ ] Magnet handoff
 
 ### Phase II
