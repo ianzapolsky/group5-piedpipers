@@ -1,7 +1,5 @@
 # The Plan
 
-hello
-
 ### Phase I
 - [x] Vertical sweep
 - [ ] Magnet handoff
