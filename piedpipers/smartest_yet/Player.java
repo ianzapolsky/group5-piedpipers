@@ -72,7 +72,7 @@ public class Player extends piedpipers.sim.Player {
 
         case 2: return chasingPhaseOne(current, rats, pipers);
 
-        case 3: return chasingPhaseTwo(current, rats, pipers, gate);
+        case 3: return chasingPhaseTwo(current, rats, pipers, gate, id);
     
         default: return moveTo(current, gate);
     }
@@ -160,9 +160,23 @@ public class Player extends piedpipers.sim.Player {
   
   }
 
-  static Point chasingPhaseTwo(Point current, Point[] rats, Point[] pipers, Point gate) {
+  static Point chasingPhaseTwo(Point current, Point[] rats, Point[] pipers, Point gate, int id) {
+      List<Point> remaining_rats = new ArrayList<Point>();
+      for (Point p : rats) {
+          if (p.x > gate.x) {
+              // we're in the right side
+              remaining_rats.add(p);
+          }
+      }
 
+      Point destination;
+      if (id == 0) {
+          destination = new Point(gate.x - 20, gate.y);
+      } else {
+          destination = remaining_rats.get(id % remaining_rats.size());
+      }
 
+      return moveTo(current, destination);
   }
 
         
