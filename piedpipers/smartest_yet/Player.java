@@ -1,4 +1,4 @@
-package piedpipers.greedy_vertical;
+package piedpipers.smartest_yet;
 
 import java.util.*;
 
@@ -19,9 +19,9 @@ public class Player extends piedpipers.sim.Player {
   // 1 = vertical sweep
   // 2 = handoff & greedy cleanup
   // 3 = #rats < #pipers
-  static int phase = 0
+  static int phase = 0;
   // wanted rats array for optimization of the greedy piper behavior
-  static int[] wantedRats = new int[7]
+  static int[] wantedRats = new int[7];
   static Point[] thePipers;
   static Point[] theRats;
 
@@ -124,9 +124,9 @@ public class Player extends piedpipers.sim.Player {
 			}
 			
 			if(Math.abs(nearestRat.x - midPoint.x) < 40 && Math.abs(nearestRat.y - midPoint.y) < 40){
-				return nearestRat;
+				return moveTo(current, nearestRat);
 			}else{
-				return midPoint;
+				return moveTo(current, midPoint);
 			}
 		break;
 		
@@ -143,7 +143,7 @@ public class Player extends piedpipers.sim.Player {
 					this.music = true;
 				}else{
 					this.music = false;
-					return rats[wantedRats[id-1]];
+					return moveTo(current, rats[wantedRats[id-1]]);
 				}
 			}else{ // moving back to dropbox
 				// handover logic
@@ -152,11 +152,11 @@ public class Player extends piedpipers.sim.Player {
 					gotWantedRat = false;
 				}
 				
-				return pipers[0];
+				return moveTo(current,pipers[0]);
 			}
 	}
     
-	return current;
+	return moveTo(current, current);
   
   }
 
