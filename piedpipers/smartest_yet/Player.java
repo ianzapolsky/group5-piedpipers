@@ -1,4 +1,4 @@
-package piedpipers.greedy_vertical;
+package piedpipers.smartest_yet;
 
 import java.util.*;
 
@@ -19,39 +19,36 @@ public class Player extends piedpipers.sim.Player {
   // 1 = vertical sweep
   // 2 = handoff & greedy cleanup
   // 3 = #rats < #pipers
-  static int phase = 0
+  static int phase = 0;
   // wanted rats array for optimization of the greedy piper behavior
-  static int[] wantedRats = new int[7]
+  static int[] wantedRats = new int[7];
   static Point[] thePipers;
   static Point[] theRats;
 
+  int magnet;
   boolean inPosition = false; // piper reached initial position
   boolean atBottom = false; // piper reached bottom of board in vertical sweep
   boolean backAtGate = false; // piper returned to the gate
   boolean gotWantedRat = false; // piper returning the assigned rat
 
-
-
-  
 	public void init() {
 		thetas = new int[npipers];
+    magnet = npipers / 2;
     phase = 0;
 	}
 
 	public Point move(Point[] pipers, // all pipers
                     Point[] rats) { // all rats
-	thePipers = pipers;
-	theRats = rats;
+	  thePipers = pipers;
+	  theRats = rats;
 		npipers = pipers.length;
 	  nrats = rats.length;
 
     // utility points
     Point gate = new Point(dimension/2, dimension/2);
     Point rightMid = new Point(dimension, dimension/2);
-    Point leftMid = new Point((dimension/2)-3, dimension/2);
+    Point leftMid = new Point(0, dimension/2);
 		Point current = pipers[id];
-
-    boolean hasrats = hasAllRatsinHorizontalRange(current, rats, areaLeft, areaRight);
 
     // vertical strip
     double areaSize = (dimension / 2) / npipers; 
@@ -64,156 +61,155 @@ public class Player extends piedpipers.sim.Player {
       initi = true;
 		}
 
+    System.out.println("Player " + id + " is in phase " + phase);
+  
+    boolean allRatsCaptured = haveAllRats(pipers, rats);
+
+    if (allRatsCaptured) {
+      if (backAtGate) {
+        return moveTo(current, leftMid);
+      } else {
+        if (distance(current, gate) < 3) {
+          backAtGate = true;
+        }
+        return moveTo(current, gate);
+      }
+    }
+
     switch(phase) {
 
-        case 0: return moveToInitialPosition(current, initialPosition, pipers);
+        case 0: return moveToInitialPosition(current, gate, initialPosition, pipers);
 
         case 1: return sweepVertically(current, rats, pipers, areaLeft, areaRight);
+  
+        case 2: return handoffPhase(current, rats, pipers);
 
-        case 2: return chasingPhaseOne(current, rats, pipers);
+        case 3: return chasingPhaseOne(current, rats, pipers);
 
-        case 3: return chasingPhaseTwo(current, rats, pipers, gate);
+        case 4: return chasingPhaseTwo(current, rats, pipers, gate);
     
         default: return moveTo(current, gate);
     }
 
   }
 
-  static Point moveToInitialPosition(Point current, Point position, Point[] pipers) {
+  public Point moveToInitialPosition(Point current, Point gate, Point position, Point[] pipers) {
+
+    if (distance(current, position) < 5)
+      phase = 1;
+
+    /*
     boolean allSet = true; 
-    for (i = 0; i < pipers.length; i++)
+    for (int i = 0; i < pipers.length; i++)
       if (distance(current, position) > 5) {
         allSet = false;
         break;
       }
     if (allSet)
       phase = 1; 
-    return moveTo(current, position);
+    */
+
+    // if we're still on the left side, go to the gate
+    if (getSide(current) == 0) 
+      return moveTo(current, gate);
+    else
+      return moveTo(current, position);
   }
 
-  static Point sweepVertically(Point current, Point[] rats, Point[] pipers, double areaLeft, double areaRight) {
-    boolean allSet = true;
-    for (i = 0; i < pipers.length; i++)
-      if (current.y > dimension - 10) {
-        allSet = false;
-        break;
-      }
-    if (allSet) 
+  public Point sweepVertically(Point current, Point[] rats, Point[] pipers, double areaLeft, double areaRight) {
+    if (current.y > dimension - 20)
       phase = 2;
+    this.music = true;
     Point closestRat = closestRatBelowinHorizontalRange(current, rats, areaLeft, areaRight);
     return moveTo(current, closestRat);
   }
 
-  static Point chasingPhaseOne(Point current, Point[] rats, Point[] pipers) {
-	switch(id){
-		case 0: // dropbox piper
+  public Point handoffPhase(Point current, Point[] rats, Point[] pipers) {
 
-			Point midPoint = new Point(dimension * (3.0 / 4.0), dimension/2);
-			Point nearestRat = closestRat(current, rats);
-			this.music = true;
-			
-			// logic for switching phase
-			int remainingRatsCounter = rats.length;
-			for(int i = 0; i < rats.length; i++){
-				if(distance(current, rats[i]) < 10){
-					remainingRatsCounter--;
-				}
-			}
-			if(remainingRatsCounter < pipers.length){
-				phase = 3;
-			}
-			
-			if(Math.abs(nearestRat.x - midPoint.x) < 40 && Math.abs(nearestRat.y - midPoint.y) < 40){
-				return nearestRat;
-			}else{
-				return midPoint;
-			}
-		break;
-		
-		case 1: // team leader piper assign jobs
-			for(int i = 0; i < wantedRats.length; i++){
-				wantedRats[i] = closestRatIndex(pipers[i+1], rats);				
-			}
-			// intentially no break so leader piper could also pick up rat
-		
-		default: // the rest pipers are not thinkers :|
-			if(!gotWantedRat){
-				if(distance(current, rats[wantedRats[id-1]]) < 10){
-					gotWantedRat = true;
-					this.music = true;
-				}else{
-					this.music = false;
-					return rats[wantedRats[id-1]];
-				}
-			}else{ // moving back to dropbox
-				// handover logic
-				if(distance(current, pipers[0]) < 0.5){
-					music = false;
-					gotWantedRat = false;
-				}
-				
-				return pipers[0];
-			}
-	}
-    
-	return current;
-  
+    boolean allSet = true;
+    for (int i = 0; i < pipers.length; i++)
+      if (distance(pipers[i], pipers[magnet]) > .5) {
+        allSet = false;
+        break;
+      }
+
+    if (allSet) {
+      phase = 3;
+      return current;
+    }
+
+    if (id == magnet) { // dropbox piper
+      this.music = true;
+      return current;
+    } else { // all other pipers
+      this.music = true;
+      Point dropbox = pipers[magnet];
+      return moveTo(current, dropbox);
+    }
   }
 
-  static Point chasingPhaseTwo(Point current, Point[] rats, Point[] pipers, Point gate) {
+  public Point chasingPhaseOne(Point current, Point[] rats, Point[] pipers) {
+    if(ratsLeft(rats, pipers) < npipers-1){
+        phase = 4;
+        return current;
+    }
+    if (id == magnet) { // dropbox piper
 
+	  		Point midPoint = new Point(dimension * (3.0 / 4.0), dimension/2);
+	  		Point nearestRat = closestRat(current, rats);
+	  		this.music = true;
+	  		
+	  		if(Math.abs(nearestRat.x - midPoint.x) < 40 && Math.abs(nearestRat.y - midPoint.y) < 40)
+	  			return moveTo(current, nearestRat);
+	  		else
+	  			return moveTo(current, midPoint);
 
-  }
-
+    } else { // all other pipers
         
-/**
+        double quadrantSize = dimension/npipers;
+        double top = id*quadrantSize;
+        double bottom = (id+1)*quadrantSize;
+        Point closestRat = closestRatinVerticalRange(current, rats, top, bottom);
+        return moveTo(current, closestRat);
 
-    if (getSide(current) == 0 && !hasrats && !backAtGate) {
-			this.music = false;
-      return moveTo(current, gate);
-		} 
-    else if (!inPosition) {
-      this.music = false;
-      if (distance(current, position) < 1.0)
-        inPosition = true;
-      return moveTo(current, position);
     }
-    else if (hasrats) {
-      this.music = true;
-      if (!backAtGate)
-        if (distance(current, gate) < 1.0) {
-          backAtGate = true;
-          return moveTo(current, leftMid);
+  }
+
+  public Point chasingPhaseTwo(Point current, Point[] rats, Point[] pipers, Point gate) {
+    List<Point> remaining_rats = new ArrayList<Point>();
+    for (Point p : rats) {
+        boolean flag = true;
+        for(int i = 0; i < npipers; i++){
+          if(distance(pipers[i], p) < 10){
+            flag = false;
+            break;
+          }
         }
-        else 
-          return moveTo(current, gate);
-      else
-        return moveTo(current, leftMid);
+        if(flag && getSide(p) == 1){
+          remaining_rats.add(p);
+        }
     }
-    else if (!atBottom) {
-      this.music = true;
-      Point closestRat = closestRatBelowinHorizontalRange(current, rats, areaLeft, areaRight);
-      if (current.y > dimension - 20)
-          atBottom = true;
-      return moveTo(current, closestRat);
-    }
-    else {
-      this.music = true;
-      Point closestRat = closestRatBelowinHorizontalRange(current, rats, areaLeft, areaRight);
-      if (current.y < 20)
-        atBottom = false;
-      return moveTo(current, closestRat);
-    }
-	}
 
-*/
+    Point destination;
+    if (id == 0) {
+        destination = gate;
+    } else {
+        if(id < remaining_rats.size() + 1){
+          destination = remaining_rats.get(id - 1); 
+        }else{
+          return moveTo(current, gate);
+        }
+    }
+    return moveTo(current, destination);
+
+  }
 
 	static double distance(Point a, Point b) {
 		return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 	}
 
   // returns the valid move 
-  static Point moveTo(Point current, Point goal) {
+  public Point moveTo(Point current, Point goal) {
     double dist = distance(current, goal);
     double oy, ox;
     if (this.music) {
@@ -228,35 +224,54 @@ public class Player extends piedpipers.sim.Player {
     return current;
   }
 
+  public int getPhase() {
+    return phase;
+  }
+
+  public int ratsLeft(Point[] rats, Point[] pipers) {
+    
+    int ratsLeft = rats.length;
+    for (int i = 0; i < nrats; i++) {
+      if (getSide(rats[i]) == 0) {
+        ratsLeft -= 1;    
+        continue;
+      } else
+        for (int j = 0; j < npipers; j++)
+          if (distance(rats[i], pipers[j]) < 10) {
+            ratsLeft -= 1;
+            break;
+          }
+    }
+    return ratsLeft;
+  }
+
   // return the closest rat not under the influence of the piper
-  static Point closestRatIndex(Point current, Point[] rats) {
-    Point closestRatIdx = -1;  
+  public int closestRatIndex(Point current, Point[] rats) {
+    int closestRatIndex = -1;
     double leastDist = Double.MAX_VALUE;
     for (int i = 0; i < rats.length; i++) {
       double currentDist = distance(current, rats[i]);
       if (currentDist < leastDist && currentDist > 10) {
-		// Edward here: adding checking for other pipers' influence
-		if(thePipers != null){
-			boolean flag = false;
-			for(int j = 0; j < thePipers.length; j++){
-				if(distance(thePiper[j],rats[i]) < 10.0){
-					flag = true;
-					break;
-				}
-			}
-			if(flag){
-				continue;
-			}else{
-				closestRat = i;
+		    // Edward here: adding checking for other pipers' influence
+		    if (thePipers != null) {
+		    	boolean flag = false;
+		    	for (int j = 0; j < thePipers.length; j++) {
+		    		if (distance(thePipers[j], rats[i]) < 10.0) {
+		    			flag = true;
+		    			break;
+		    		}
+		    	}
+		    	if (flag) {
+		    		continue;
+		    	} else {
+		    		closestRatIndex = i;
 		        leastDist = currentDist;
-			}
-			
-		}
-		// Edward out
- 
+		    	}
+		    }
+		    // Edward out
       }
     }
-    return closestRatIdx;
+    return closestRatIndex;
   }
 
   // return the closest rat not under the influence of the piper
@@ -266,25 +281,23 @@ public class Player extends piedpipers.sim.Player {
     for (int i = 0; i < rats.length; i++) {
       double currentDist = distance(current, rats[i]);
       if (currentDist < leastDist && currentDist > 10) {
-		// Edward here: adding checking for other pipers' influence
-		if(thePipers != null){
-			boolean flag = false;
-			for(int j = 0; j < thePipers.length; j++){
-				if(distance(thePiper[j],rats[i]) < 10.0){
-					flag = true;
-					break;
-				}
-			}
-			if(flag){
-				continue;
-			}else{
-				closestRat = rats[i];
+		    // Edward here: adding checking for other pipers' influence
+		    if(thePipers != null){
+		    	boolean flag = false;
+		    	for(int j = 0; j < thePipers.length; j++){
+		    		if(distance(thePipers[j], rats[i]) < 10.0){
+		    			flag = true;
+		    			break;
+		    		}
+		    	}
+		    	if(flag){
+		    		continue;
+		    	}else{
+		    		closestRat = rats[i];
 		        leastDist = currentDist;
-			}
-			
-		}
-		// Edward out
- 
+		    	}
+		    }
+        // Edward out
       }
     }
     return closestRat;
@@ -295,7 +308,7 @@ public class Player extends piedpipers.sim.Player {
     Point closestRat = rats[0];  
     double leastDist = Double.MAX_VALUE;
     for (int i = 0; i < rats.length; i++) {
-      if (rats[i].y >= top && rats[i].y <= bottom) {
+      if (rats[i].y >= top && rats[i].y <= bottom && getSide(rats[i]) != 0) {
         double currentDist = distance(current, rats[i]);
         if (currentDist < leastDist && currentDist > 10) {
           closestRat = rats[i];
@@ -306,9 +319,9 @@ public class Player extends piedpipers.sim.Player {
     return closestRat;
   }
 
-  static Point closestRatBelowinHorizontalRange(Point current, Point[] rats,
+  public Point closestRatBelowinHorizontalRange(Point current, Point[] rats,
                                          double left, double right) {
-    Point closestRat = rats[0];  
+    Point closestRat = new Point(current.x, dimension);
     double leastDist = Double.MAX_VALUE;
     for (int i = 0; i < rats.length; i++) {
       if (rats[i].x >= left && rats[i].x <= right && rats[i].y > current.y) {
