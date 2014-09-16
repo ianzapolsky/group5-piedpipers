@@ -90,7 +90,7 @@ public class Player extends piedpipers.sim.Player {
       if (backAtGate) {
         return moveTo(leftMid);
       } else {
-        if (distance(currentLocation, gate) < 3) {
+        if (distance(currentLocation, gate) < 1) {
           backAtGate = true;
         }
         return moveTo(gate);
@@ -208,10 +208,10 @@ public class Player extends piedpipers.sim.Player {
         double quadrantSize = dimension/npipers;
         double top = id*quadrantSize;
         double bottom = (id+1)*quadrantSize;
-        // Point closestRat = closestRatinVerticalRange(top, bottom);
-		int closestRat = closestRatIndex();
+        return moveTo(closestRatinVerticalRange(top, bottom));
+		//int closestRat = closestRatIndex();
 		
-        return chaseRat(closestRat);
+        //return chaseRat(closestRat);
 
     }
   }
