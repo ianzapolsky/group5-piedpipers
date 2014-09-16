@@ -1,0 +1,25 @@
+updates:
+- all current location removed. the new utilify functions are as following:
+ ** modified method **
+  int getSide(Point p) 
+  boolean haveAllRats()
+  boolean closetoWall()
+  Point closestRatBelowinHorizontalRange(double left, double right)
+  Point closestRatinVerticalRange(double top, double bottom)
+  int closestRatinVerticalRangeIndex(double top, double bottom)
+  Point closestRat()
+  int ratsLeft()
+  Point moveTo(Point goal)
+ ** newly added index generating method **
+  int closestRatIndex()
+  int closestRatBelowinHorizontalRangeIndex(double left, double right)
+  int closestRatinVerticalRangeIndex(double top, double bottom)
+ ** newly added index using method **
+  Point chaseRat(int ratIndex)
+
+The chaseRat method would make the greedy algorithm tilt the direction so that unless it's a hard chasing (piper and rats heading in the same direction) it would "catch" the rat instead of chasing it. 
+
+Also, I guess eventually we woule come down to a solution that keeps tracking all the rats using set/map or what not. In that case I think it would be easier to use index instead of actual location since we could always get the location from index but not the other way around.
+
+Cheers
+Edward
