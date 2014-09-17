@@ -14,10 +14,10 @@
 
 PIPERS=2
 RATS=50
-PLAYER="master_slave"
+PLAYER="group5"
 FIELDSIZE=500
 
-NUMTESTS=20
+NUMTESTS=100
 
 totalticks=0
 
@@ -25,13 +25,15 @@ for i in `seq 1 $NUMTESTS`;
 do
 
   echo "executing test "$i":"
+ 
+  random=$RANDOM
   
-  output="$(java piedpipers.sim.Piedpipers $PLAYER $PIPERS $RATS false $RANDOM $FIELDSIZE 2>&1 )"
+  output="$(java piedpipers.sim.Piedpipers $PLAYER $PIPERS $RATS false $random $FIELDSIZE 2>&1 )"
   ticks="$(echo $output | awk '{print $(NF-1)}' )"
 
   if [[ $ticks =~ ^[0-9]+$ ]]; then
     totalticks="$((totalticks+ticks))"
-    echo "finished in "$ticks" ticks\n"
+    echo "finished in "$ticks" ticks for seed = "$random"\n"
   else
     echo "test timed out\n"
     NUMTESTS=$((NUMTESTS-1))

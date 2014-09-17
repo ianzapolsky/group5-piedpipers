@@ -1,4 +1,4 @@
-package piedpipers.master_slave;
+package piedpipers.group5;
 
 import java.util.*;
 
@@ -20,8 +20,7 @@ public class Player extends piedpipers.sim.Player {
   Point[] rats;
   boolean[] piperMusic;
   Point[] previousRats;
-  double targetDelta;
-  int ignoreRatIndex = -1;
+  int chasingCutoff = 2;
 
   // (not used here)
   int phase = 0;
@@ -93,7 +92,7 @@ public class Player extends piedpipers.sim.Player {
 
         case 0: nextMove = masterMove();
                 break;
-        case 1: if (remainingRats() <= 10) 
+        case 1: if (remainingRats() <= chasingCutoff) 
                   nextMove = slaveMove();
                 else
                   nextMove = masterMove();
@@ -109,7 +108,6 @@ public class Player extends piedpipers.sim.Player {
 	  	  previousRats[i].y = rats[i].y;
 	   	}
 	    trackingCounter = 0;
-//      targetDelta = distance(currentLocation, rats[currentlyPursuedRat]);
 	  }
     return nextMove;
   }
@@ -132,7 +130,7 @@ public class Player extends piedpipers.sim.Player {
 	  //else
 	  //	return moveTo(midPoint);
 
-    if (remainingRats() > 10)
+    if (remainingRats() > chasingCutoff && nearestRat != -1)
       return chaseRat(nearestRat);
     else 
       return moveTo(midPoint);
@@ -163,7 +161,10 @@ public class Player extends piedpipers.sim.Player {
 
   public Point chaserMove() {
     this.music = true;
+	  Point midPoint = new Point(dimension * (3.0 / 4.0), dimension/2);
     int closestRatIndex = closestRatIndex();
+    if (closestRatIndex == -1)
+      return moveTo(midPoint);
     return chaseRat(closestRatIndex());
   }
     
@@ -253,7 +254,7 @@ public class Player extends piedpipers.sim.Player {
   int closestRatIndex() {
     int closestRatIndex = -1;
     double leastDist = Double.MAX_VALUE;
-    for (int i = 0; i < rats.length && i != ignoreRatIndex; i++) {
+    for (int i = 0; i < rats.length; i++) {
       double currentLocationDist = distance(currentLocation, rats[i]);
       if (currentLocationDist < leastDist && currentLocationDist > 10 && movingTowardsMe(pipers[id], previousRats[i], rats[i])) {
 		    // Edward here: adding checking for other pipers' influence
@@ -275,6 +276,7 @@ public class Player extends piedpipers.sim.Player {
 		    // Edward out
       }
     }
+    System.out.println("closest rat index: " + closestRatIndex);
     return closestRatIndex;
   }
 
