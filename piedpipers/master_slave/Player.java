@@ -109,7 +109,7 @@ public class Player extends piedpipers.sim.Player {
 	  	  previousRats[i].y = rats[i].y;
 	   	}
 	    trackingCounter = 0;
-      targetDelta = distance(currentLocation, rats[currentlyPursuedRat]);
+//      targetDelta = distance(currentLocation, rats[currentlyPursuedRat]);
 	  }
     return nextMove;
   }
@@ -242,13 +242,20 @@ public class Player extends piedpipers.sim.Player {
     return ratsLeft;
   }
 
+  boolean movingTowardsMe(Point piper, Point previous_rat, Point rat) {
+      double x = (rat.x - previous_rat.x) * (rat.x - piper.x);
+      double y = (rat.y - previous_rat.y) * (rat.y - piper.y);
+
+      return x + y < 0.0;
+  }
+
   // return the closest rat not under the influence of the piper
   int closestRatIndex() {
     int closestRatIndex = -1;
     double leastDist = Double.MAX_VALUE;
     for (int i = 0; i < rats.length && i != ignoreRatIndex; i++) {
       double currentLocationDist = distance(currentLocation, rats[i]);
-      if (currentLocationDist < leastDist && currentLocationDist > 10) {
+      if (currentLocationDist < leastDist && currentLocationDist > 10 && movingTowardsMe(pipers[id], previousRats[i], rats[i])) {
 		    // Edward here: adding checking for other pipers' influence
 		    if (pipers != null) {
 		    	boolean flag = false;
