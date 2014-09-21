@@ -277,13 +277,13 @@ public class Player extends piedpipers.sim.Player {
   double portionOfWidthCovered() {
     double doubleDimension = (double)(dimension/2);
     double doublePipers = (double)npipers;
-    return ((doublePipers * 10)/doubleDimension) * 100;
+    return ((doublePipers * 20)/doubleDimension) * 100;
   }
 
   double portionOfHeightCovered() {
     double doubleDimension = (double)(dimension);
     double doublePipers = (double)npipers;
-    return ((doublePipers * 10)/doubleDimension) * 100;
+    return ((doublePipers * 20)/doubleDimension) * 100;
   }
 
   public int remainingRats() {
