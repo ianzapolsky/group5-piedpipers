@@ -2,13 +2,17 @@
 
 ### Phase I
 - [x] Vertical sweep
-- [ ] Magnet handoff
+- [x] Magnet handoff
 
 ### Phase II
-- [ ] Central-ish greedy magnet Edward
-- [ ] clean up pipers, all go for the nearest rat and return to magnet Edward
+- [x] Central-ish greedy magnet Edward
+- [x] clean up pipers, all go for the nearest rat and return to magnet Edward
 
 ### Phase III
-- [ ] If < 7 rats remain, send magnet home
-- [ ] Each piper gets one rat, brings it back to the left side
+- [x] If < 7 rats remain, send magnet home
+- [x] Each piper gets one rat, brings it back to the left side
 
+# Optimizations
+- [ ] Based on percentage of dimension we can cover with our pipers, decide on the sweep
+- [ ] Calculate rats per square meter and use as factor for sweep decision
+- [ ] If remaining rats > npipers - 1, do greedy, otherwise assign magnet and individual piper > individual rat
