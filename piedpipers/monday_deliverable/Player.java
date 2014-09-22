@@ -89,9 +89,6 @@ public class Player extends piedpipers.sim.Player {
       initi = true;
     }
 
-    System.out.println(portionOfWidthCovered());
-    System.out.println(portionOfHeightCovered());
-
     boolean haveRats = haveAllRats();
   
     // startgame
@@ -168,41 +165,31 @@ public class Player extends piedpipers.sim.Player {
     else {
       if (id == magnetId) {
         if (!sweepOver) {
-          //System.out.println("sweeping");
           nextMove = verticalSweeperMove();
         }
         else if (!handoffComplete){
-          //System.out.println("handing off");
           nextMove = handoffMove();
         }
         else{
-          //System.out.println("masterMove");
           nextMove = masterMove();
           }
       } else {
         if (!sweepOver){ 
-          //System.out.println("sweeping");
           nextMove = verticalSweeperMove();
         }
         else if (!handoffComplete || !inSection){
-          //System.out.println("handing off");
           nextMove = handoffMove();
         }
         else {
           if (remainingRats() <= chasingCutoff) {
-            //System.out.println("slave move");
             nextMove = slaveMove();
           }
-          else{
-            //System.out.println("master move");
+          else {
             nextMove = masterMove();
           }
         }
       }
     }
-
-
-
 
     // sample rats' location differences to. used to tile direction
     if(++trackingCounter == 15){  // take sample every 1.5 second
@@ -271,10 +258,13 @@ public class Player extends piedpipers.sim.Player {
   public Point verticalSweeperMove() {
     if (inPosition) {
       this.music = true;
-      if (currentLocation.y > dimension - 15)
+      if (currentLocation.y > dimension - 5)
         sweepOver = true;
-      Point closestRat = closestRatBelowinHorizontalRange(areaLeft, areaRight);
-      return moveTo(closestRat); 
+      int closestRatIndex = closestRatBelowinHorizontalRangeIndex(areaLeft, areaRight);
+      if (closestRatIndex == -1)
+        return moveTo(new Point((areaLeft + areaRight)/2, dimension));
+      else
+        return moveTo(rats[closestRatIndex]); 
     } else {
       this.music = false;
       if (distance(currentLocation, initialPosition) < 1)
@@ -315,7 +305,6 @@ public class Player extends piedpipers.sim.Player {
           return moveTo(sectionMidPoint);
         }
       }
-
     }
   }
 
@@ -379,9 +368,9 @@ public class Player extends piedpipers.sim.Player {
 	  return adjustedLocation;
   }
 
-// tilt direction to avoid endless chasing
-// using the predicted location instead of actual location
-// tested: THIS IS AWESOME
+  // tilt direction to avoid endless chasing
+  // using the predicted location instead of actual location
+  // tested: THIS IS AWESOME
   Point chaseRat(int ratIndex){
     return moveTo(futureRats[ratIndex]);
   }
@@ -544,7 +533,7 @@ public class Player extends piedpipers.sim.Player {
   }
 
   int closestRatBelowinHorizontalRangeIndex(double left, double right){
-    int closestRat = 0;
+    int closestRat = -1;
     double leastDist = Double.MAX_VALUE;
     for (int i = 0; i < rats.length; i++) {
       if (rats[i].x >= left && rats[i].x <= right && rats[i].y > currentLocation.y) {
