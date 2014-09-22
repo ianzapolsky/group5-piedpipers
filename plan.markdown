@@ -13,6 +13,8 @@
 - [x] Each piper gets one rat, brings it back to the left side
 
 # Optimizations
-- [ ] Based on percentage of dimension we can cover with our pipers, decide on the sweep
-- [ ] Calculate rats per square meter and use as factor for sweep decision
-- [ ] If remaining rats > npipers - 1, do greedy, otherwise assign magnet and individual piper > individual rat
+- [x] Based on percentage of dimension we can cover with our pipers, decide on the sweep
+- [x] Calculate rats per square meter and use as factor for sweep decision
+- [x] If remaining rats > npipers - 1, do greedy, otherwise assign magnet and individual piper > individual ra
+- [x] Support ALL number of pipers, no more hanging on last rats.
+- [x] Optimized closest rat logic using both actual location and projected location. Potentially move a bit slower but no more hesitation. 
