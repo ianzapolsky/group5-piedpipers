@@ -324,6 +324,12 @@ public class Player extends piedpipers.sim.Player {
     return ((doublePipers * 20)/doubleDimension) * 100;
   }
 
+  public boolean hasArrivedAt(Point traveler, Point destination, double distance) {
+    if (distance(traveler, destination) < .5)
+      return true;
+    return false;
+  }
+  
   public int remainingRats() {
     int remainingRatsCounter = rats.length;
     for (int i = 0; i < rats.length; i++) {
