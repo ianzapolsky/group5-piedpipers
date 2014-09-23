@@ -43,9 +43,9 @@ public class Piedpipers {
 	static double WALK_DIST = 10.0; // <10m, rats walk with music piper
 	static double STOP_DIST = 2.0; // <2m, rats stop
 
-	static double WALK_SPEED = 0.1; // 1m/s, walking speed for rats
-	static double MUSICPIPER_SPEED = 0.1; // 1m/s, walking speed for music piper
-	static double PIPER_SPEED = 0.5; // 5m/s, walking speed for no music piper
+	public static double WALK_SPEED = 0.1; // 1m/s, walking speed for rats
+	public static double MUSICPIPER_SPEED = 0.1; // 1m/s, walking speed for music piper
+	public static double PIPER_SPEED = 0.5; // 5m/s, walking speed for no music piper
 
 	static double OPEN_LEFT; // left side of center opening
 	static double OPEN_RIGHT; // right side of center opening
@@ -456,7 +456,7 @@ public class Piedpipers {
 			if (dist < STOP_DIST) {
 				rspeed = 0;
 				randommove = false;
-				// Random random = new Random();
+				//Random random = new Random();
 				int theta = random.nextInt(360);
 				thetas[ratId] = theta;
 
@@ -492,7 +492,7 @@ public class Piedpipers {
 		
 		// hit the left fence
 		if (nx < 0) {
-			 System.err.println("RAT HITS THE LEFT FENCE!!!");
+			// System.err.println("RAT HITS THE LEFT FENCE!!!");
 			// move the point to the left fence
 			Point temp = new Point(0, now.y);
 			// how much we have already moved in x-axis?
@@ -509,7 +509,7 @@ public class Piedpipers {
 		}
 		// hit the right fence
 		if (nx > dimension) {
-			System.err.println("RAT HITS THE RIGHT FENCE!!!");
+			// System.err.println("RAT HITS THE RIGHT FENCE!!!");
 			// move the point to the right fence
 			Point temp = new Point(dimension, now.y);
 			double moved = (dimension - now.x);
@@ -522,7 +522,7 @@ public class Piedpipers {
 		}
 		// hit the up fence
 		if (ny < 0) {
-			System.err.println("RAT HITS THE UP FENCE!!!");
+			// System.err.println("RAT HITS THE UP FENCE!!!");
 			// move the point to the up fence
 			Point temp = new Point(now.x, 0);
 			double moved = 0 - now.y;
@@ -535,7 +535,7 @@ public class Piedpipers {
 		}
 		// hit the bottom fence
 		if (ny > dimension) {
-			System.err.println("RAT HITS THE BOTTOM FENCE!!!");
+			// System.err.println("RAT HITS THE BOTTOM FENCE!!!");
 			Point temp = new Point(now.x, dimension);
 			double moved = (dimension - now.y);
 			double oy2 = -(oy - moved);
@@ -548,7 +548,7 @@ public class Piedpipers {
 		assert ny >= 0 && ny <= dimension;
 		// hit the middle fence
 		if (hitTheFence(now.x, now.y, nx, ny)) {
-			System.err.println("SHEEP HITS THE CENTER FENCE!!!");
+			// System.err.println("SHEEP HITS THE CENTER FENCE!!!");
 			// System.err.println(nx + " " + ny);
 			// System.err.println(ox + " " + oy);
 			// move the point to the fence
@@ -658,7 +658,8 @@ public class Piedpipers {
 			Point[] pipercopy = copyPointArray(pipers);
 
 			try {
-				next[d] = players[d].move(pipercopy, rats, pipermusic);
+				//next[d] = players[d].move(pipercopy, rats, pipermusic);
+				next[d] = players[d].move(pipercopy, rats, pipermusic, thetas);
 				pipermusic[d] = players[d].music;
 			} catch (Exception e) {
 				e.printStackTrace();
