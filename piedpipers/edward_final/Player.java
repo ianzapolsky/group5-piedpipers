@@ -50,6 +50,7 @@ public class Player extends piedpipers.sim.Player {
   Point sectionMidPoint;
   Point currentLocation;
   Point intersectionLocation; 
+
   public void init() {
     magnetId = npipers/2;
     wantedRats = new int[npipers];
@@ -122,9 +123,10 @@ public class Player extends piedpipers.sim.Player {
     Point nextMove = gate;
     
     // single piper mode:
-    if(npipers == 1){
-      return masterMove();
+    if(npipers == 1) {
+      return lonerMove();
     }
+
     // case with no sweep
     //if (npipers * 20.0 < dimension * 0.3 || npipers * 100 < nrats) {
     if(true){
@@ -197,6 +199,16 @@ public class Player extends piedpipers.sim.Player {
     return nextMove;
   }
 
+// ====================
+// masterMove
+// ====================
+  
+  public Point lonerMove() {
+    this.music = true;
+    int nearestRat = closestRatIndex();
+    return chaseRat(nearestRat);
+  }
+    
 // ====================
 // masterMove
 // ====================
