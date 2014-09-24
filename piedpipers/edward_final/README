@@ -1,0 +1,17 @@
+# COMS W4444 - PiedPipers Player - Group 5
+# Edward Feng, Moawia Munir Eldeeb, Ian Zapolsky
+
+This directory contains the final code for group 5's player on the piedpipers
+challenge for the Programming and Problem Solving class.
+
+## Final Changes from Ian
+
+- Added comments throughout
+- Deleted unused functions (handoffMove, among others)
+- Deleted unused variables
+- Changed the logic of slaveMove to ignore section divisions. I observed slave 
+  pipers waiting around due to this check, so instead I allow slave pipers to 
+  go after the nearest rat to them over the entire board, which results in 
+  better performance for both the sweep and no-sweep cases.
+- Reduced distance the piper needs to be from the bottom of the field to signal
+  sweepOver. This ensures that no rats will remain beneath the sweep. 

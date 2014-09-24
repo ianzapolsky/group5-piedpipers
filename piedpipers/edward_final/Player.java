@@ -1,12 +1,16 @@
+// ==============================================
+// COMS W4444 - PiedPipers Player - Group 5
+// Edward Feng, Moawia Munir Eldeeb, Ian Zapolsky
+// ==============================================
+
 package piedpipers.edward_final;
 
 import java.util.*;
-
 import piedpipers.sim.Point;
 
 public class Player extends piedpipers.sim.Player {
 
-  // REQUIRED STUFF FOR SIM
+  // Simulator variables
   int npipers;
   int nrats;
   double pspeed = 0.49;
@@ -14,28 +18,19 @@ public class Player extends piedpipers.sim.Player {
   static boolean initi = false;
   int[] thetas;
 
-  // wanted rats array for optimization of the greedy piper behavior
-  int[] wantedRats;
+  // Local storage of parameters
   Point[] pipers;
   Point[] rats;
   Point[] futureRats;
   boolean[] piperMusic;
   Point[] previousRats;
-  int chasingCutoff;
 
-   // enum for different phase
-  enum Phase {
-    SWEEP_PHASE,
-    HANDOFF_PHASE,
-    GREEDY_PHASE
-  }
-
-  Phase currentPhase;
- 
+  // Important pipers
   int magnetId;
   int masterId;
   int slaveId;
 
+  // State variables
   boolean hunting = false;
   boolean inPosition = false;
   boolean sweepOver = false;
@@ -45,10 +40,12 @@ public class Player extends piedpipers.sim.Player {
   boolean masterOn = false;
   int trackingCounter = 0;
 
+  // Vertical sweep area 
   double areaSize;
   double areaLeft;  
   double areaRight;
 
+  // Utility Points
   Point initialPosition;
   Point sectionMidPoint;
   Point currentLocation;
@@ -56,7 +53,6 @@ public class Player extends piedpipers.sim.Player {
 
   public void init() {
     magnetId = npipers/2;
-    wantedRats = new int[npipers];
     previousRats = new Point[nrats];
     futureRats = new Point[nrats];
     for (int i = 0; i < nrats; i++) {
@@ -72,9 +68,7 @@ public class Player extends piedpipers.sim.Player {
     this.piperMusic = piperMusic;
     this.thetas = new int[thetas.length];
     for(int i = 0; i < this.thetas.length; i++){
-      //System.out.print(thetas[i] + ":");
       this.thetas[i] = ((thetas[i] + 360) % 360) ;
-      //System.out.println(thetas[i] );
     }
     npipers = pipers.length;
     nrats = rats.length;
@@ -94,8 +88,6 @@ public class Player extends piedpipers.sim.Player {
     initialPosition = new Point((areaLeft + areaRight)/ 2, 5);
     currentLocation = pipers[id];
     
-    chasingCutoff = 3;
-
     if (!initi) {
       this.init();
       initi = true;
@@ -131,7 +123,7 @@ public class Player extends piedpipers.sim.Player {
       return lonerMove();
     }
 
-    
+    // if the total radius covered by the piper sweep is < 90% of the board, do not sweep
     if (npipers * 20.0 < dimension * 0.45) { // case with no sweep
       if(!inPosition){
         nextMove = moveTo(sectionMidPoint);
@@ -157,7 +149,6 @@ public class Player extends piedpipers.sim.Player {
     } 
     else { // case with sweep
       if (!sweepOver) {
-        System.out.println("sweeping");
         nextMove = verticalSweeperMove();
       } else {
         // sweep over, turning on master swtich
@@ -174,9 +165,9 @@ public class Player extends piedpipers.sim.Player {
     return nextMove;
   }
 
-// ====================
-// masterMove
-// ====================
+  // ====================
+  // lonerMove
+  // ====================
   
   public Point lonerMove() {
     this.music = true;
@@ -184,9 +175,9 @@ public class Player extends piedpipers.sim.Player {
     return chaseRat(nearestRat);
   }
     
-// ====================
-// masterMove
-// ====================
+  // ====================
+  // masterMove
+  // ====================
 
   public Point masterMove() {
     this.music = true;
@@ -197,27 +188,28 @@ public class Player extends piedpipers.sim.Player {
     } 
   }
 
-// ====================
-// slaveMove
-// ====================
+  // ====================
+  // slaveMove
+  // ====================
 
   public Point slaveMove() {
     if (hunting) { // going after rats
-      System.out.println("ID: " + id + " I am hunting");
-      Point nearestRat = closestRatSectionedSlaveMode();
+      Point nearestRat = closestRatSlaveMode();
+
+      // Previously implemented logic, left in place for group discussion.
+      // Ian made the observation that ignoring section divisions at this point 
+      // performs better
+      //
+      // Point nearestRat = closestRatSectionedSlaveMode();
+
       this.music = false;
-      if (distance(currentLocation, nearestRat) < 3.0){
-        System.out.println("currentLocation: " + currentLocation.x + ":" + currentLocation.y);
-        System.out.println("ratLocation: " + nearestRat.x + ":" + nearestRat.y);
-        System.out.println("distance: " + distance(currentLocation, nearestRat));
+      if (distance(currentLocation, nearestRat) < 10.0){
         this.music = true;
         hunting = false;
       }
       return moveTo(nearestRat);
     } else { // returning rats
-      System.out.println("ID: " + id + " I am returning the rat");
-      if (distance(currentLocation, pipers[masterId]) < 2.0){
-        System.out.println(distance(currentLocation, pipers[masterId]) + " close enough");
+      if (distance(currentLocation, pipers[masterId]) < 7.0){
         this.music = false;
         hunting = true;
       }
@@ -226,9 +218,9 @@ public class Player extends piedpipers.sim.Player {
     }
   }
 
-// ====================
-// chaserMove
-// ====================
+  // ====================
+  // chaserMove
+  // ====================
 
   public Point chaserMove() {
     this.music = true;
@@ -239,14 +231,14 @@ public class Player extends piedpipers.sim.Player {
     return chaseRat(closestRatIndex());
   }
 
-// ====================
-// verticalSweeperMove
-// ====================
+  // ====================
+  // verticalSweeperMove
+  // ====================
 
   public Point verticalSweeperMove() {
     if (inPosition) {
       this.music = true;
-      if (currentLocation.y > dimension - 15)
+      if (currentLocation.y > dimension - 5)
         sweepOver = true;
       Point closestRat = closestRatBelowinHorizontalRange(areaLeft, areaRight);
       return moveTo(closestRat); 
@@ -258,92 +250,29 @@ public class Player extends piedpipers.sim.Player {
     }
   }
     
-// ====================
-// handoffMove
-// ====================
-
-  public Point handoffMove() {
-    this.music = true;
-    if (id == magnetId) {
-
-      if (!handoffComplete) {
-        if (distance(currentLocation, pipers[0]) < 2)
-          handoffComplete = true;
-        return currentLocation;
-      }
-      return currentLocation;
-
-    } else {
-
-      if (!handoffComplete) {
-        if (distance(currentLocation, pipers[magnetId]) < 2)
-          handoffComplete = true;
-        return moveTo(pipers[magnetId]);
-      }
-      else {
-        if (!inSection) {
-          this.music = false;
-          if (distance(currentLocation, sectionMidPoint) < 1)
-            inSection = true;
-          return moveTo(sectionMidPoint);
-        } else {
-          return moveTo(sectionMidPoint);
-        }
-      }
-
-    }
-  }
-
-// ====================
-// utility methods
-// ====================
+  // ====================
+  // utility methods
+  // ====================
 
   double distance(Point a, Point b) {
 	  return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
   }
 
-  double ratsPerSquareMeter() {
-    double area = dimension * (dimension/2);
-    double rats = (double)remainingRats();
-    return rats/area;
-  }
-
-  double portionOfWidthCovered() {
-    double doubleDimension = (double)(dimension/2);
-    double doublePipers = (double)npipers;
-    return ((doublePipers * 20)/doubleDimension) * 100;
-  }
-
-  double portionOfHeightCovered() {
-    double doubleDimension = (double)(dimension);
-    double doublePipers = (double)npipers;
-    return ((doublePipers * 20)/doubleDimension) * 100;
-  }
-
-  public boolean hasArrivedAt(Point traveler, Point destination, double distance) {
-    if (distance(traveler, destination) < .5)
-      return true;
-    return false;
-  }
-  
+  // return the number of remaining rats not under influence
   public int remainingRats() {
     int remainingRatsCounter = rats.length;
     for (int i = 0; i < rats.length; i++) {
       for (int j = 0; j < pipers.length; j++) {
         if ((distance(pipers[j], rats[i]) < 10 && piperMusic[j]) || getSide(rats[i]) == 0) {
-	  remainingRatsCounter--;
+	        remainingRatsCounter--;
           break;
         }
       }
     }
-    //System.out.println(remainingRatsCounter);
     return remainingRatsCounter;
   }
 
-// tilt direction to avoid endless chasing
-// using the predicted location instead of actual location
-// tested: THIS IS AWESOME
-
+  // predict future locations of the rats
   Point predictLocation(int ratIndex){
     
     Point returnPoint = new Point();
@@ -354,7 +283,6 @@ public class Player extends piedpipers.sim.Player {
     double radian = Math.toRadians(thetas[ratIndex]);
 
     if(!movingTowardsMe(ratIndex)){
-      // warning: ugly code ahead
       double cos = (Math.cos(radian - Math.PI / 2));
       double sin = (Math.sin(radian - Math.PI / 2));
       if(cos >= 0){ // moving left
@@ -437,7 +365,6 @@ public class Player extends piedpipers.sim.Player {
 
         }
       }
-      
       // right now we have ratPoint and radian as the correct location and radian
     }
 
@@ -447,9 +374,7 @@ public class Player extends piedpipers.sim.Player {
     ratToCurrent = (ratToCurrent + 2 * Math.PI) % (2 * Math.PI);
     radian = (radian + 2 * Math.PI) % (2 * Math.PI); 
     double radianDifference = Math.abs(ratToCurrent - radian);
-    //System.out.println("ratToCurrent: " + Math.toDegrees(ratToCurrent) + "; radian: " + Math.toDegrees(radian) + "diff: " + Math.toDegrees(radianDifference));
     offSet = distance(currentLocation, ratPoint) /(2.0 * Math.cos(radianDifference));
-    //System.out.println("offset = " + offSet); 
     returnPoint.x = ratPoint.x + offSet * Math.cos(radian - Math.PI / 2);
     returnPoint.y = ratPoint.y - offSet * Math.sin(radian - Math.PI / 2);
     if (returnPoint.y > dimension)
@@ -463,14 +388,14 @@ public class Player extends piedpipers.sim.Player {
     return returnPoint;
   }
 
-// tilt direction to avoid endless chasing
-// using the predicted location instead of actual location
-// tested: THIS IS AWESOME
+  // tilt direction to avoid endless chasing
+  // using the predicted location instead of actual location
+  // tested: THIS IS AWESOME
   Point chaseRat(int ratIndex){
     return moveTo(futureRats[ratIndex]);
   }
 
-  // returns the valid move 
+  // returns a valid move from current location to goal
   Point moveTo(Point goal) {
     double dist = distance(currentLocation, goal);
     double oy, ox;
@@ -495,12 +420,14 @@ public class Player extends piedpipers.sim.Player {
     return adjustedLocation;
   }
 
+  // compute whether some point is moving toward the current piper or not
   boolean movingTowardsMe(Point location, double radian){
     double currentToRat = Math.atan2(location.x - currentLocation.x , location.y - currentLocation.y);
     currentToRat = (currentToRat + 2 * Math.PI) % (2 * Math.PI);
     return Math.abs(currentToRat - radian) > Math.PI / 2; 
   }
 
+  // compute whether the rat is moving toward the current piper or not
   boolean movingTowardsMe(int ratIndex){
     double ratToCurrent= Math.atan2(currentLocation.x - rats[ratIndex].x ,currentLocation.y - rats[ratIndex].y);
     double currentToRat = Math.atan2(rats[ratIndex].x - currentLocation.x , rats[ratIndex].y - currentLocation.y);
@@ -510,7 +437,7 @@ public class Player extends piedpipers.sim.Player {
     return movingTowardsMe(rats[ratIndex], radians);
   }
 
-  // givn an idex, figure out if the rat is already controlled by a piper
+  // givn an index, figure out if the rat is already controlled by a piper
   boolean isFreeRat(int index){
     double myDist = distance(rats[index], currentLocation);
     for(int i = 0; i < npipers; i++){
@@ -526,19 +453,31 @@ public class Player extends piedpipers.sim.Player {
     }
     return true;
   }
+
   // givn an idex, figure out if the rat is already controlled by a piper
   boolean isFreeRatSlaveMode(int index){
     double myDist = distance(rats[index], currentLocation);
-    for(int i = 0; i < npipers; i++){
-      if(i == id || i % 2 == 1) // ignore all master pipers 
-        continue;
-      // check:
-      // 1. whether a rat is following another piper
-      // 2. whether there is another piper with closer distance
-      double otherDist = distance(rats[index], pipers[i]);
-      if(otherDist < myDist){
+    for(int i = 0; i < npipers; i++) {
+
+      // check whether a rat is within 10 meters of another piper
+      if (distance(rats[index], pipers[i]) < 10.0 && i != id) {
         return false;
       }
+
+      // Previously implemented logic, left in place for discussion among team
+      //
+      //if(i == id || i % 2 == 1) { // ignore all master pipers 
+      //  /* do nothing */;
+      //}
+      //else {
+      //// check:
+      //// 1. whether a rat is following another piper
+      //// 2. whether there is another piper with closer distance
+      //double otherDist = distance(rats[index], pipers[i]);
+      //if(otherDist < myDist) {
+      //  return false;
+      //}
+
     }
     return true;
   }
@@ -547,7 +486,7 @@ public class Player extends piedpipers.sim.Player {
   int closestRatIndex() {
     int closestRatIndex = -1;
     double leastDist = Double.MAX_VALUE;
-    // super fancy future prediction logic
+    // future prediction logic
     for (int i = 0; i < rats.length; i++) {
       double currentLocationDist = distance(currentLocation, futureRats[i]);
       if ( getSide(rats[i]) == 1 &&
@@ -574,17 +513,39 @@ public class Player extends piedpipers.sim.Player {
     return closestRatIndex;
   }
 
-  // For Slave: return the closest rat not under the influence of the piper for 2 sectors
+  // A non-sectioned slave mode greedy rat 
+  int closestRatIndexSlaveMode() {
+    int closestRatIndex = -1;
+    double leastDist = Double.MAX_VALUE;
+    
+    // future prediction logic
+    for (int i = 0; i < rats.length; i++) {
+      double masterDistance = distance(pipers[masterId], rats[i]);
+      if ( getSide(rats[i]) == 1 && masterDistance > 10.0 && masterDistance < leastDist 
+           && isFreeRatSlaveMode(i)) {
+        closestRatIndex = i;
+	      leastDist = masterDistance;
+      }
+    }
+    return closestRatIndex;
+  }
+
+  // return the closest rat not under influence of piper
+  Point closestRatSlaveMode() {
+    int closestRat = closestRatIndexSlaveMode();
+    if (closestRat < 0) {
+      return moveTo(new Point(dimension/2, dimension/2));
+    } else {
+      return rats[closestRat];
+    }
+  }
+
+  // return index of the closest rat not under influence of piper for 2 sectors
   int closestRatIndexSectionedSlaveMode() {
     int closestRatIndex = -1;
     double leastDist = Double.MAX_VALUE;
     double upperY = (npipers==0)? 0 : id * dimension / npipers;
     double lowerY = (npipers==0)? 0 : (id+2) * dimension / npipers;
-    System.out.println("masterId: " + masterId);
-    System.out.println(">upperY: " + (rats[60].y >= upperY));
-    System.out.println("<lowerY: " + (rats[60].y <= lowerY));
-    System.out.println("masterDistance: " + distance(pipers[masterId], rats[60]));
-    System.out.println("isFreeRat: " + isFreeRat(60));
     
     // super fancy future prediction logic
     for (int i = 0; i < rats.length; i++) {
@@ -596,25 +557,26 @@ public class Player extends piedpipers.sim.Player {
 	      leastDist = masterDistance;
       }
     }
-    System.out.println(closestRatIndex);
     return closestRatIndex;
   }
-  
+  // return closest rat not under influence of piper for 2 sectors
   Point closestRatSectionedSlaveMode(){
     int index = closestRatIndexSectionedSlaveMode();
-    if( index < 0 ){
+    if ( index < 0 ) {
       return moveTo(new Point(dimension/2, dimension/2));
-    }else{
+    } else {
       return rats[index];
     }
   }
+
   // return the closest rat not under the influence of the piper
   int closestRatIndexSectioned() {
     int closestRatIndex = -1;
     double leastDist = Double.MAX_VALUE;
     double upperY = (npipers==0)? 0 : id * dimension / npipers;
     double lowerY = (npipers==0)? 0 : (id+1) * dimension / npipers;
-    // super fancy future prediction logic
+
+    // future prediction logic
     for (int i = 0; i < rats.length; i++) {
       double currentLocationDist = distance(currentLocation, futureRats[i]);
       if ( getSide(rats[i]) == 1 &&
@@ -627,37 +589,23 @@ public class Player extends piedpipers.sim.Player {
 	      leastDist = currentLocationDist;
       }
     }
-    if(closestRatIndex == -1){
+    if (closestRatIndex == -1) {
       for (int i = 0; i < rats.length; i++) {
-      double currentLocationDist = distance(currentLocation, futureRats[i]);
+        double currentLocationDist = distance(currentLocation, futureRats[i]);
         if ( getSide(rats[i]) == 1 &&
-           distance(rats[i], currentLocation) > 10.0 && 
-           currentLocationDist < leastDist && 
-           isFreeRat(i) && 
-           movingTowardsMe(i)) {
+             distance(rats[i], currentLocation) > 10.0 && 
+             currentLocationDist < leastDist && 
+             isFreeRat(i) && 
+             movingTowardsMe(i)) {
           closestRatIndex = i;
 	        leastDist = currentLocationDist;
         }
       }
     }
-    // in case the optimized logic failed, use the dummy-chasing closest rat logic improve ticks by 4000 :|
-//    if(closestRatIndex == -1 || leastDist > dimension/2){
-//      closestRatIndex = 0;
-//      leastDist = Double.MAX_VALUE;
-//      for(int i = 0; i < nrats; i++){
-//        double currentLocationDist = distance(currentLocation, rats[i]);
-//        if(getSide(rats[i]) == 1 && currentLocationDist < leastDist && currentLocationDist > 10.0){
-//          closestRatIndex = i;
-//          leastDist = distance(currentLocation, rats[i]);
-//        }
-//      }
-//    }
     return closestRatIndex == -1? 0: closestRatIndex;
   }
 
-
-
-
+  // return the index of closest rat beneath player within its vertical strip
   int closestRatBelowinHorizontalRangeIndex(double left, double right){
     int closestRat = -1;
     double leastDist = Double.MAX_VALUE;
@@ -673,45 +621,46 @@ public class Player extends piedpipers.sim.Player {
     return closestRat;
   }
 
+  // return either the closest rat to the piper that is beneath it on the field
+  // and within its vertical strip , or return the position of the lower wall
+  // toward which the sweep is moving
   Point closestRatBelowinHorizontalRange(double left, double right) {
     int closestRatIndex = closestRatBelowinHorizontalRangeIndex(left, right);
-    if (closestRatIndex == -1) {
+    if (closestRatIndex == -1)
       return new Point((left + right) / 2, dimension);
-    } else {
+    else
       return rats[closestRatBelowinHorizontalRangeIndex(left, right)];
-    }
   }
-
 
   // return true if the pipers collectively all have all the rats under their
   // influence
   boolean haveAllRats() {
     for (int i = 0; i < nrats; i++) {
-	  if(getSide(rats[i]) == 0){  // only care about rats on the right fence
-		continue;
-	  }
+	    if(getSide(rats[i]) == 0){  // only care about rats on the right fence
+		    continue;
+	    }
       boolean isControlled = false;
-      for (int j = 0; j < npipers; j++){
-		if (distance(rats[i], pipers[j]) < 10  && piperMusic[j]){ // case: some piper got the rat 
-		  isControlled = true;	
-		  break;
-		}
-	  }
+      for (int j = 0; j < npipers; j++) {
+		    if (distance(rats[i], pipers[j]) < 10  && piperMusic[j]) { // case: some piper got the rat 
+		      isControlled = true;	
+		      break;
+		    }
+	    }
       if(!isControlled)
-		return false;
+		    return false;
     }
     return true;
   }
 
   // return location's side
-  // 0 = left, 1 = right, 2 = invalid
+  // 0 = left, 1 = right, 2 = gate
   int getSide(Point p) {
-	if (p.x < dimension * 0.5)
-	  return 0;
-	else if (p.x > dimension * 0.5)
-	  return 1;
-	else
-	  return 2;
+	  if (p.x < dimension * 0.5)
+	    return 0;
+	  else if (p.x > dimension * 0.5)
+	    return 1;
+	  else
+	    return 2;
   }
 
 }

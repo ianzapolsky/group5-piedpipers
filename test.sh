@@ -12,12 +12,12 @@
 #
 #############################################################################################
 
-PIPERS=2
-RATS=50
-PLAYER="group5"
+PIPERS=8
+RATS=500
+PLAYER="edward_final"
 FIELDSIZE=500
 
-NUMTESTS=100
+NUMTESTS=50
 
 totalticks=0
 
