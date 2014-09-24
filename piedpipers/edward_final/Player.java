@@ -205,14 +205,14 @@ public class Player extends piedpipers.sim.Player {
     if (hunting) { // going after rats
       System.out.println("ID: " + id + " I am hunting");
       Point nearestRat = closestRatSectionedSlaveMode();
-      if (distance(currentLocation, nearestRat) < 0.5){
+      this.music = false;
+      if (distance(currentLocation, nearestRat) < 3.0){
         System.out.println("currentLocation: " + currentLocation.x + ":" + currentLocation.y);
         System.out.println("ratLocation: " + nearestRat.x + ":" + nearestRat.y);
         System.out.println("distance: " + distance(currentLocation, nearestRat));
         this.music = true;
         hunting = false;
       }
-      this.music = false;
       return moveTo(nearestRat);
     } else { // returning rats
       System.out.println("ID: " + id + " I am returning the rat");
@@ -513,10 +513,24 @@ public class Player extends piedpipers.sim.Player {
   // givn an idex, figure out if the rat is already controlled by a piper
   boolean isFreeRat(int index){
     double myDist = distance(rats[index], currentLocation);
-    if(myDist < 10.0)
-      return false;
     for(int i = 0; i < npipers; i++){
       if(i == id)
+        continue;
+      // check:
+      // 1. whether a rat is following another piper
+      // 2. whether there is another piper with closer distance
+      double otherDist = distance(rats[index], pipers[i]);
+      if(otherDist < myDist){
+        return false;
+      }
+    }
+    return true;
+  }
+  // givn an idex, figure out if the rat is already controlled by a piper
+  boolean isFreeRatSlaveMode(int index){
+    double myDist = distance(rats[index], currentLocation);
+    for(int i = 0; i < npipers; i++){
+      if(i == id || i % 2 == 1) // ignore all master pipers 
         continue;
       // check:
       // 1. whether a rat is following another piper
@@ -566,28 +580,23 @@ public class Player extends piedpipers.sim.Player {
     double leastDist = Double.MAX_VALUE;
     double upperY = (npipers==0)? 0 : id * dimension / npipers;
     double lowerY = (npipers==0)? 0 : (id+2) * dimension / npipers;
+    System.out.println("masterId: " + masterId);
+    System.out.println(">upperY: " + (rats[60].y >= upperY));
+    System.out.println("<lowerY: " + (rats[60].y <= lowerY));
+    System.out.println("masterDistance: " + distance(pipers[masterId], rats[60]));
+    System.out.println("isFreeRat: " + isFreeRat(60));
+    
     // super fancy future prediction logic
     for (int i = 0; i < rats.length; i++) {
-      double currentLocationDist = distance(currentLocation, futureRats[i]);
-      if ( getSide(rats[i]) == 1 && rats[i].y >= lowerY && rats[i].y <= upperY && 
-           distance(rats[i], currentLocation) > 10.0 && currentLocationDist < leastDist && 
-           isFreeRat(i)) {
+      double masterDistance = distance(pipers[masterId], rats[i]);
+      if ( getSide(rats[i]) == 1 && rats[i].y >= upperY && rats[i].y <= lowerY && 
+           masterDistance > 10.0 && masterDistance < leastDist && 
+           isFreeRatSlaveMode(i)) {
         closestRatIndex = i;
-	      leastDist = currentLocationDist;
+	      leastDist = masterDistance;
       }
     }
-    if(closestRatIndex == -1){
-      for (int i = 0; i < rats.length; i++) {
-      double currentLocationDist = distance(currentLocation, futureRats[i]);
-      if ( getSide(rats[i]) == 1 &&
-           distance(rats[i], currentLocation) > 10.0 && 
-           currentLocationDist < leastDist && 
-           isFreeRat(i)) {
-        closestRatIndex = i;
-	      leastDist = currentLocationDist;
-        }
-      }
-    }
+    System.out.println(closestRatIndex);
     return closestRatIndex;
   }
   
@@ -609,7 +618,7 @@ public class Player extends piedpipers.sim.Player {
     for (int i = 0; i < rats.length; i++) {
       double currentLocationDist = distance(currentLocation, futureRats[i]);
       if ( getSide(rats[i]) == 1 &&
-           rats[i].y >= lowerY && rats[i].y <= upperY && 
+           rats[i].y <= lowerY && rats[i].y >= upperY && 
            distance(rats[i], currentLocation) > 10.0 && 
            currentLocationDist < leastDist && 
            isFreeRat(i) && 
